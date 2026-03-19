@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  coverLetters  CoverLetter[]
+  cvs           CV[]
+  purchasedLists PurchasedList[]
+  interviews    InterviewSimulation[]
+  audits        LinkedInAudit[]
+  roadmap       CareerRoadmap?
+  plan          String    @default("Junior") // Junior, Senior, Directeur
+  credits       Int       @default(3)        // Generations left
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model JobOffer {
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  location    String
+  description String
+  type        String   // CDI, CDD, Alternance, Stage
+  sourceUrl   String?
+  createdAt   DateTime @default(now())
+}
+
+model InterviewSimulation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  jobTitle    String
+  messages    String   // Store as JSON string
+  score       Int?
+  createdAt   DateTime @default(now())
+}
+
+model LinkedInAudit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  profileUrl  String
+  result      String   // Store as JSON string
+  score       Int
+  createdAt   DateTime @default(now())
+}
+
+model CareerRoadmap {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  goal        String
+  steps       String   // Store as JSON string
+  progress    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model CoverLetter {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  jobTitle    String
+  company     String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CV {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  content     String   // JSON or Markdown
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  name        String
+  position    String
+  company     String
+  email       String?
+  linkedinUrl String?
+  category    String?
+}
+
+model PurchasedList {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  listType    String   // e.g., "200_CONTACTS_VIP"
+  amount      Float
+  createdAt   DateTime @default(now())
+}
